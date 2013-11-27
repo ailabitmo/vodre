@@ -1,10 +1,14 @@
 package ru.ifmo.ailab.vodre.example;
 
 import java.io.IOException;
+import java.util.ArrayList;
 import javax.ws.rs.GET;
 import javax.ws.rs.Path;
 import javax.ws.rs.core.Response;
+
+import com.google.gson.Gson;
 import org.apache.commons.io.IOUtils;
+import org.drools.definition.rule.Rule;
 import org.drools.definition.type.FactType;
 import org.drools.event.rule.BeforeActivationFiredEvent;
 import org.drools.event.rule.DefaultAgendaEventListener;
@@ -13,6 +17,7 @@ import org.drools.event.rule.ObjectRetractedEvent;
 import org.drools.event.rule.ObjectUpdatedEvent;
 import org.drools.event.rule.WorkingMemoryEventListener;
 import org.drools.runtime.StatefulKnowledgeSession;
+import org.drools.runtime.rule.Activation;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -26,13 +31,15 @@ public class Runner {
             throws IOException, InstantiationException, IllegalAccessException {
         final byte[] pkg = IOUtils.toByteArray(this.getClass()
                 .getResourceAsStream("/credit.pkg"));
+
         StatefulKnowledgeSession session = null;
         try {
             session = KnowledgeBaseHelper.createStatefulSession(pkg);
             logger.debug("Created a session");
-            
+
+            AgendaEventListenerImpl listener = new AgendaEventListenerImpl();
             session.addEventListener(new WorkingMemoryEventListenerImpl());
-            session.addEventListener(new AgendaEventListenerImpl());
+            session.addEventListener(listener);
             
             FactType applicationForCredit = session.getKnowledgeBase().getFactType("credit", "ApplicationForCredit");
             FactType creditDecision = session.getKnowledgeBase().getFactType("credit", "CreditDecision");
@@ -46,18 +53,26 @@ public class Runner {
             
             logger.debug("Firing the rules...");
             session.fireAllRules();
+
+            ArrayList<TriggeredRuleData> triggeredRules = listener.getTriggeredRules();
+
+            Gson gson = new Gson();
+            String rulesJson = gson.toJson(triggeredRules);
+
+            return Response.ok(rulesJson).build();
+        } catch (Exception ex) {
+            return Response.serverError().build();
         } finally {
             session.dispose();
         }
-        
-        return Response.ok("{\"name\": \"Hello World!\"}").build();
     }
     
     private class WorkingMemoryEventListenerImpl
             implements WorkingMemoryEventListener {
-        
+
         @Override
         public void objectInserted(ObjectInsertedEvent event) {
+            logger.info("ObjectInserted: {}", event);
             logger.debug("ObjectInserted: {}", event);
         }
         
@@ -74,11 +89,26 @@ public class Runner {
     
     private class AgendaEventListenerImpl extends DefaultAgendaEventListener {
 
+        private ArrayList<TriggeredRuleData> triggeredRules;
+
+        public AgendaEventListenerImpl() {
+            triggeredRules = new ArrayList<TriggeredRuleData>();
+        }
+
+        public ArrayList<TriggeredRuleData> getTriggeredRules() {
+            return triggeredRules;
+        }
+
         @Override
         public void beforeActivationFired(BeforeActivationFiredEvent event) {
-            logger.debug("BeforeActivationFired: rule = {}; objects = {}", 
-                    event.getActivation().getRule().getName(),
-                    event.getActivation().getObjects());
+            Activation activation = event.getActivation();
+            Rule rule = activation.getRule();
+            TriggeredRuleData ruleData = new TriggeredRuleData(rule.getName());
+            triggeredRules.add(ruleData);
+
+            logger.debug("BeforeActivationFired: rule = {}; objects = {}",
+                    rule.getName(),
+                    activation.getObjects());
         }
         
     }
