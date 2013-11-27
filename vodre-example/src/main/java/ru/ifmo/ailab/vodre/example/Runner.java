@@ -37,27 +37,28 @@ public class Runner {
             session = KnowledgeBaseHelper.createStatefulSession(pkg);
             logger.debug("Created a session");
 
-            AgendaEventListenerImpl listener = new AgendaEventListenerImpl();
-            session.addEventListener(new WorkingMemoryEventListenerImpl());
-            session.addEventListener(listener);
-            
+            ArrayList<IWorkflowData> workflowData = new ArrayList<IWorkflowData>();
+
+            WorkingMemoryEventListenerImpl workingMemoryEventListener = new WorkingMemoryEventListenerImpl(workflowData);
+            AgendaEventListenerImpl agendaEventListener = new AgendaEventListenerImpl(workflowData);
+            session.addEventListener(workingMemoryEventListener);
+            session.addEventListener(agendaEventListener);
+
             FactType applicationForCredit = session.getKnowledgeBase().getFactType("credit", "ApplicationForCredit");
             FactType creditDecision = session.getKnowledgeBase().getFactType("credit", "CreditDecision");
             Object application = applicationForCredit.newInstance();
             applicationForCredit.set(application, "Age", 17);
             Object decision = creditDecision.newInstance();
-            
+
             session.insert(application);
             session.insert(decision);
             logger.debug("Inserted facts");
-            
+
             logger.debug("Firing the rules...");
             session.fireAllRules();
 
-            ArrayList<TriggeredRuleData> triggeredRules = listener.getTriggeredRules();
-
             Gson gson = new Gson();
-            String rulesJson = gson.toJson(triggeredRules);
+            String rulesJson = gson.toJson(workflowData);
 
             return Response.ok(rulesJson).build();
         } catch (Exception ex) {
@@ -69,34 +70,43 @@ public class Runner {
     
     private class WorkingMemoryEventListenerImpl
             implements WorkingMemoryEventListener {
+        private ArrayList<IWorkflowData> workflowData;
+
+        public WorkingMemoryEventListenerImpl(ArrayList<IWorkflowData> workflowData) {
+            this.workflowData = workflowData;
+        }
 
         @Override
         public void objectInserted(ObjectInsertedEvent event) {
+            TriggeredEventData eventData = new TriggeredEventData("objectInserted", event.getObject().toString());
+            workflowData.add(eventData);
+
             logger.info("ObjectInserted: {}", event);
             logger.debug("ObjectInserted: {}", event);
         }
         
         @Override
         public void objectUpdated(ObjectUpdatedEvent event) {
+            TriggeredEventData eventData = new TriggeredEventData("objectUpdated", event.getObject().toString());
+            workflowData.add(eventData);
+
             logger.debug("ObjectUpdated: {}", event);
         }
         
         @Override
         public void objectRetracted(ObjectRetractedEvent event) {
+            TriggeredEventData eventData = new TriggeredEventData("objectRetracted", event.getOldObject().toString());
+            workflowData.add(eventData);
+
             logger.debug("ObjectRetracted: {}", event);
         }
     }
     
     private class AgendaEventListenerImpl extends DefaultAgendaEventListener {
+        private ArrayList<IWorkflowData> workflowData;
 
-        private ArrayList<TriggeredRuleData> triggeredRules;
-
-        public AgendaEventListenerImpl() {
-            triggeredRules = new ArrayList<TriggeredRuleData>();
-        }
-
-        public ArrayList<TriggeredRuleData> getTriggeredRules() {
-            return triggeredRules;
+        public AgendaEventListenerImpl(ArrayList<IWorkflowData> workflowData) {
+            this.workflowData = workflowData;
         }
 
         @Override
@@ -104,7 +114,7 @@ public class Runner {
             Activation activation = event.getActivation();
             Rule rule = activation.getRule();
             TriggeredRuleData ruleData = new TriggeredRuleData(rule.getName());
-            triggeredRules.add(ruleData);
+            workflowData.add(ruleData);
 
             logger.debug("BeforeActivationFired: rule = {}; objects = {}",
                     rule.getName(),
