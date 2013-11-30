@@ -4,6 +4,7 @@ import java.io.IOException;
 import java.util.ArrayList;
 import javax.ws.rs.GET;
 import javax.ws.rs.Path;
+import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 
 import com.google.gson.Gson;
@@ -60,7 +61,7 @@ public class Runner {
             Gson gson = new Gson();
             String rulesJson = gson.toJson(workflowData);
 
-            return Response.ok(rulesJson).build();
+            return Response.ok(rulesJson).type(MediaType.APPLICATION_JSON_TYPE).build();
         } catch (Exception ex) {
             return Response.serverError().build();
         } finally {
