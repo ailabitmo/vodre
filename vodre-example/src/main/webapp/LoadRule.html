@@ -1,0 +1,36 @@
+<!DOCTYPE html>
+<html>
+    <head>
+        <title>Load rule</title>
+        <meta charset="UTF-8">
+        <meta name="viewport" content="width=device-width">
+        <script src="scripts/jquery-2.0.3.min.js"></script>
+        <script src="scripts/loadRule.js"></script>
+    </head>
+    <body>
+        <form>
+           <div>
+               <label for="loadPkg0">Load *.pkg file</label>
+               <input id="loadPkg0" type="file" accept="application/octet">
+               <div id="classDescription0" class="classDescr" style="border:1px solid black;">
+                    <p> 
+                        Class name
+                        <input id="classDescription0_className" type="text">
+                        
+                    </p>
+                    <p class="classFields">
+                        Field:
+                        <input id="classDescription0_fieldName0" type="text">
+                        Value:
+                        <input id="classDescription0_fieldValue0" type="text">
+                    </p>
+                    <input id="classDescription0_newField" type="button" value="New field" onclick="addNewField(this);">
+               </div>
+               <input id="newClass" type="button" value="New class" onclick="addNewClass(this);">
+               <p>
+                <input type="submit" value="Upload">
+               </p>
+            </div>
+        </form>
+    </body>
+</html>
