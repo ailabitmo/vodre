@@ -1,32 +1,34 @@
 <!DOCTYPE html>
-<html>
+<html ng-app="vodreApp">
     <head>
         <title>Load rule</title>
         <meta charset="UTF-8">
         <meta name="viewport" content="width=device-width">
         <script src="scripts/jquery-2.0.3.min.js"></script>
+        <script src="scripts/angular.min.js"></script>
         <script src="scripts/loadRule.js"></script>
     </head>
-    <body>
+    <body ng-controller="RulesController">
         <form>
            <div>
                <label for="loadPkg0">Load *.pkg file</label>
                <input id="loadPkg0" type="file" accept="application/octet">
-               <div id="classDescription0" class="classDescr" style="border:1px solid black;">
+               <div class="classDescr" style="border:1px solid black;" ng-repeat="class in classes">
                     <p> 
                         Class name
-                        <input id="classDescription0_className" type="text">
-                        
+                        <input type="text">
+                        <input type="button" value="Remove class" ng-click="removeClass(class)" ng-hide="$first">
                     </p>
-                    <p class="classFields">
+                    <p class="classFields" ng-repeat="field in class.fields">
                         Field:
-                        <input id="classDescription0_fieldName0" type="text">
+                        <input type="text" ng-value="field.name">
                         Value:
-                        <input id="classDescription0_fieldValue0" type="text">
+                        <input type="text" ng-value="field.value">
+                        <input type="button" value="Remove" ng-click="removeField(field, class)" ng-hide="$first">
                     </p>
-                    <input id="classDescription0_newField" type="button" value="New field" onclick="addNewField(this);">
+                    <input id="classDescription0_newField" type="button" value="New field" ng-click="addField(class)">
                </div>
-               <input id="newClass" type="button" value="New class" onclick="addNewClass(this);">
+               <input id="newClass" type="button" value="New class" ng-click="addClass()">
                <p>
                 <input type="submit" value="Upload">
                </p>
