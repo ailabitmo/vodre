@@ -2,6 +2,7 @@ var vodreApp = angular.module("vodreApp", []);
 
 vodreApp.controller("RulesController", function($scope) {
     $scope.classes = [newClass()];
+    updateBinding();
 
     $scope.addField = function($class) {
         $class.fields.push(newField());
@@ -35,6 +36,7 @@ vodreApp.controller("RulesController", function($scope) {
     }
 
     function updateBinding() {
+        $scope.facts = JSON.stringify($scope.classes);
         setTimeout(function() {
             $scope.$apply();
         }, 1);
