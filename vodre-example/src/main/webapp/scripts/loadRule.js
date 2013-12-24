@@ -1,46 +1,56 @@
 var vodreApp = angular.module("vodreApp", []);
 
 vodreApp.controller("RulesController", function($scope) {
-    $scope.classes = [newClass()];
-    updateBinding();
-
-    $scope.addField = function($class) {
-        $class.fields.push(newField());
-        updateBinding();
+    $scope.fieldTypes = [newFieldType()];
+    
+    $scope.addField = function(fieldType) {
+        fieldType.fields.push(newField());
     };
 
-    $scope.removeField = function($field, $class) {
-        $class.fields.deleteObject($field);
-        updateBinding();
+    $scope.removeField = function($field, fieldType) {
+        fieldType.fields.deleteObject($field);
     };
 
-    $scope.addClass = function() {
-        $scope.classes.push(newClass());
-        updateBinding();
+    $scope.addFieldType = function() {
+        $scope.fieldTypes.push(newFieldType());
     };
 
-    $scope.removeClass = function($class) {
-        $scope.classes.deleteObject($class);
-        updateBinding();
+    $scope.removeFieldType = function(fieldType) {
+        $scope.fieldTypes.deleteObject(fieldType);
     };
 
-    function newClass() {
-        return { fields: [newField()] };
-    }
+    function newFieldType() {
+        return { fields: [newField()], name: ""};
+    };
 
     function newField() {
         return {
             name: "",
             value: ""
         };
-    }
-
-    function updateBinding() {
-        $scope.facts = JSON.stringify($scope.classes);
-        setTimeout(function() {
-            $scope.$apply();
-        }, 1);
-    }
+    };
+    
+    $scope.uploadFile = function() {
+        var formData = new FormData($('#form')[0]);
+        var packagePath = $('#file').val().split("\\");
+        var packageName = packagePath[packagePath.length-1].replace(/\.[^/.]+$/, "");
+        
+        formData.append("package",packageName);
+        formData.append("fieldTypesCount",$scope.fieldTypes.length);
+        for (var i = 0; i < $scope.fieldTypes.length; i++) {
+            formData.append("fieldsCount"+i,$scope.fieldTypes[i].fields.length);
+        }
+        $.ajax({
+            url: 'rest/FileService/processFile/',  //Server script to process data
+            type: 'POST',
+            // Form data
+            data: formData,
+            //Options to tell jQuery not to process data or worry about content-type.
+            cache: false,
+            contentType: false,
+            processData: false
+        });
+    };
 });
 
 Array.prototype.deleteObject = function(object) {

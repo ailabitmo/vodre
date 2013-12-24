@@ -9,33 +9,29 @@
         <script src="scripts/loadRule.js"></script>
     </head>
     <body ng-controller="RulesController">
-        <form method="post" action="FileService/processFile/" enctype="multipart/form-data">
-            <input type="hidden" name="facts" ng-value="facts"/>
-
+        <form id="form">
             <div>
-                <label for="loadPkg0">Load *.pkg file</label>
-                <input id="loadPkg0" name="file" type="file" accept="application/octet">
-
-                <div class="classDescr" style="border:1px solid black;" ng-repeat="class in classes">
+                <label for="file">Load *.pkg file</label>
+                <input id="file" name="file" type="file"/>
+                <div class="fieldTypeDescr" style="border:1px solid black;" ng-repeat="fieldType in fieldTypes">
                     <p>
-                        Class name
-                        <input type="text">
-                        <input type="button" value="Remove class" ng-click="removeClass(class)" ng-hide="$first">
+                        Field type name
+                        <input type="text" name="fieldTypeName{{$index}}" />
+                        <input type="button" value="Remove field type" ng-click="removeFieldType(fieldType)" ng-hide="$first"/>
                     </p>
-
-                    <p class="classFields" ng-repeat="field in class.fields">
+                    <p class="fields" ng-repeat="field in fieldType.fields">
                         Field:
-                        <input type="text" ng-value="field.name">
+                        <input type="text" name="fieldName{{$parent.$index}}{{$index}}" ng-model="field.name"/>
                         Value:
-                        <input type="text" ng-value="field.value">
-                        <input type="button" value="Remove" ng-click="removeField(field, class)" ng-hide="$first">
+                        <input type="text" name="fieldValue{{$parent.$index}}{{$index}}" ng-model="field.value"/>
+                        <input type="button" value="Remove" ng-click="removeField(field, fieldType)" ng-hide="$first"/>
                     </p>
-                    <input type="button" value="New field" ng-click="addField(class)">
+                    <input type="button" value="New field" ng-click="addField(fieldType)"/>
                 </div>
-                <input id="newClass" type="button" value="New class" ng-click="addClass()">
+                <input id="newClass" type="button" value="New field type" ng-click="addFieldType()"/>
 
                 <p>
-                    <input type="submit" value="Upload">
+                    <input type="submit" value="Upload"  ng-click="uploadFile()"/>
                 </p>
             </div>
         </form>
